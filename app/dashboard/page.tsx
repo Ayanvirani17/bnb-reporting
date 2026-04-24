@@ -84,27 +84,74 @@ export default function Dashboard() {
   }
 
   const exportToPDF = () => {
-    const doc = new jsPDF() as any;
-    doc.text("BNB Restaurant & Cafe - P&L Statement", 14, 15);
-    doc.text(`Period: ${period}`, 14, 22);
+    const doc = new jsPDF();
     
-    doc.autoTable({
-      startY: 30,
-      head: [['Category', 'Amount', '% of Revenue']],
-      body: [
-        ['Revenue', fmt(revenue), '100%'],
-        ['COGS', fmt(cogs), `${pct(cogs)}%`],
-        ['Gross Margin', fmt(gm), `${pct(gm)}%`],
-        ['Variable Cost', fmt(variableCosts), `${pct(variableCosts)}%`],
-        ['Contribution Margin', fmt(contributionMargin), `${pct(contributionMargin)}%`],
-        ['Opex', fmt(opex), `${pct(opex)}%`],
-        ['Non Opex', fmt(nonOpex), `${pct(nonOpex)}%`],
-        ['Net Profit', fmt(netProfit), `${pct(netProfit)}%`],
-      ],
-      theme: 'grid',
-      headStyles: { fillStyle: 'F', fillColor: [79, 70, 229] }
+    // Title
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("BNB Restaurant & Cafe", 14, 18);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text(`Profit & Loss Statement — ${period}`, 14, 26);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 32);
+
+    // Reset color
+    doc.setTextColor(0);
+
+    // Table rows
+    const rows = [
+      ['Revenue', fmt(revenue), '100%'],
+      ['COGS', fmt(cogs), `${pct(cogs)}%`],
+      ['Gross Margin (GM)', fmt(gm), `${pct(gm)}%`],
+      ['Variable Cost', fmt(variableCosts), `${pct(variableCosts)}%`],
+      ['Contribution Margin', fmt(contributionMargin), `${pct(contributionMargin)}%`],
+      ['Opex', fmt(opex), `${pct(opex)}%`],
+      ['Non Opex', fmt(nonOpex), `${pct(nonOpex)}%`],
+      ['NET PROFIT', fmt(netProfit), `${pct(netProfit)}%`],
+    ];
+
+    // Manual table drawing (no plugin needed)
+    const startY = 42;
+    const rowHeight = 10;
+    const colWidths = [90, 55, 40];
+    const startX = 14;
+
+    // Header
+    doc.setFillColor(79, 70, 229);
+    doc.setTextColor(255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.rect(startX, startY, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+    doc.text("Category", startX + 3, startY + 7);
+    doc.text("Amount", startX + colWidths[0] + 3, startY + 7);
+    doc.text("% of Revenue", startX + colWidths[0] + colWidths[1] + 3, startY + 7);
+
+    // Rows
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    rows.forEach((row, i) => {
+      const y = startY + rowHeight * (i + 1);
+      const isHighlight = row[0].includes("Margin") || row[0].includes("PROFIT");
+      
+      if (isHighlight) {
+        doc.setFillColor(240, 240, 255);
+        doc.rect(startX, y, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+      }
+
+      doc.setTextColor(0);
+      doc.setFont("helvetica", row[0] === 'NET PROFIT' ? "bold" : "normal");
+      doc.text(row[0], startX + 3, y + 7);
+      doc.text(row[1], startX + colWidths[0] + 3, y + 7);
+      doc.text(row[2], startX + colWidths[0] + colWidths[1] + 3, y + 7);
+
+      // Row border
+      doc.setDrawColor(220, 220, 220);
+      doc.line(startX, y + rowHeight, startX + colWidths[0] + colWidths[1] + colWidths[2], y + rowHeight);
     });
-    doc.save(`P&L_${period}.pdf`);
+
+    doc.save(`PL_${period}.pdf`);
   }
 
   const Row = ({ label, amount, category, isTotal = false, isPercent = false }: any) => {
