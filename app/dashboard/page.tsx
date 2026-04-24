@@ -54,28 +54,42 @@ export default function Dashboard() {
     results.filter(r => r.period === period && r.pl_category === cat)
 
   // Period 1 calculations
-  const p1 = {
-    revenue: totalFor(period1, "Revenue"),
-    cogs: totalFor(period1, "COGS"),
-    variable: totalFor(period1, "Variable Cost"),
-    opex: totalFor(period1, "Opex"),
-    nonOpex: totalFor(period1, "Non Opex"),
-  }
-  p1.gm = p1.revenue - p1.cogs
-  p1.cm = p1.gm - p1.variable
-  p1.net = p1.cm - p1.opex - p1.nonOpex
+  type Metrics = {
+  revenue: number
+  cogs: number
+  variable: number
+  opex: number
+  nonOpex: number
+  gm: number
+  cm: number
+  net: number
+}
 
-  // Period 2 calculations
-  const p2 = {
-    revenue: totalFor(period2, "Revenue"),
-    cogs: totalFor(period2, "COGS"),
-    variable: totalFor(period2, "Variable Cost"),
-    opex: totalFor(period2, "Opex"),
-    nonOpex: totalFor(period2, "Non Opex"),
+const calculateMetrics = (period: string): Metrics => {
+  const revenue = totalFor(period, "Revenue")
+  const cogs = totalFor(period, "COGS")
+  const variable = totalFor(period, "Variable Cost")
+  const opex = totalFor(period, "Opex")
+  const nonOpex = totalFor(period, "Non Opex")
+
+  const gm = revenue - cogs
+  const cm = gm - variable
+  const net = cm - opex - nonOpex
+
+  return {
+    revenue,
+    cogs,
+    variable,
+    opex,
+    nonOpex,
+    gm,
+    cm,
+    net,
   }
-  p2.gm = p2.revenue - p2.cogs
-  p2.cm = p2.gm - p2.variable
-  p2.net = p2.cm - p2.opex - p2.nonOpex
+}
+
+const p1 = calculateMetrics(period1)
+const p2 = calculateMetrics(period2)
 
   const fmt = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n)
   const pct = (val: number, rev: number) => rev > 0 ? ((val / rev) * 100).toFixed(1) + "%" : "0.0%"
